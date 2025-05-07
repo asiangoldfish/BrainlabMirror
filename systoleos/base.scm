@@ -111,7 +111,7 @@
                        (".conkyrc" ,conkyrc)
                        (".ideskrc" ,ideskrc))) %base-home-services))))
 
-(define-public systoleos-base
+(define systoleos-base
   (operating-system
     ; (inherit installation-os)
 
