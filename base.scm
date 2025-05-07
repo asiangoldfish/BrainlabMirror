@@ -1,7 +1,7 @@
 ;; This operating-system image definition can be built with:
 ;; `guix system image -L . -t iso9660 guix-systole/systoleos/systoleos.scm`
 
-(define-module (guix-systole systoleos systoleos)
+(define-module (systoleos base)
   #:use-module (guix channels)
   #:use-module (guix gexp)
   #:use-module (guix build utils)
@@ -67,15 +67,6 @@
              (openpgp-fingerprint
               "2A39 3FFF 68F4 EF7A 3D29  12AF 6F51 20A0 22FB B2D5"))))
          (channel
-           (name 'guix)
-           (url "https://codeberg.org/guix/guix-mirror.git")
-           (branch "master")
-           (introduction
-            (make-channel-introduction
-             "c91e27c60864faa229198f6f0caf620275c429a2"
-             (openpgp-fingerprint
-              "2841 9AC6 5038 7440 C7E9 2FFA 2208 D209 58C1 DEB0"))))
-         (channel
            (name 'guix-systole)
            (url "https://github.com/SystoleOS/guix-systole")
            ;; (branch "dev")
@@ -122,11 +113,9 @@
                        (".conkyrc" ,conkyrc)
                        (".ideskrc" ,ideskrc))) %base-home-services))))
 
-(define systoleos-configuration
+(define systoleos-base
   (operating-system
-    (inherit installation-os)
-    (kernel linux)
-    (firmware (list linux-firmware iucode-tool amd-microcode))
+    ; (inherit installation-os)
 
     (host-name "systole")
     (timezone "Europe/Oslo")
@@ -253,9 +242,4 @@
                                                                          "https://substitutes.nonguix.org"))
                                                       (channels %channels))))))
 
-    ;; Add the 'net.ifnames' argument to prevent network interfaces
-    ;; from having really long names.  This can cause an issue with
-    ;; wpa_supplicant when you try to connect to a wifi network.
-    (kernel-arguments '("quiet" "modprobe.blacklist=radeon" "net.ifnames=0"))))
-
-systoleos-configuration
+systoleos-base
