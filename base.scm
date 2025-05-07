@@ -6,8 +6,6 @@
   #:use-module (guix gexp)
   #:use-module (guix build utils)
   #:use-module (guix build-system trivial)
-  #:use-module ((guix licenses)
-                #:prefix license:)
   #:use-module (gnu packages version-control)
   #:use-module (gnu packages vim)
   #:use-module (gnu packages curl)
