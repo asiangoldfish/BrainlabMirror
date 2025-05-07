@@ -1,13 +1,11 @@
 ;; This operating-system image definition can be built with:
 ;; `guix system image -L . -t iso9660 guix-systole/systoleos/systoleos.scm`
 
-(define-module (base)
+(define-module (systoleos base)
   #:use-module (guix channels)
   #:use-module (guix gexp)
   #:use-module (guix build utils)
   #:use-module (guix build-system trivial)
-  #:use-module ((guix licenses)
-                #:prefix license:)
   #:use-module (gnu packages version-control)
   #:use-module (gnu packages vim)
   #:use-module (gnu packages curl)
@@ -113,13 +111,30 @@
                        (".conkyrc" ,conkyrc)
                        (".ideskrc" ,ideskrc))) %base-home-services))))
 
-(define systoleos-configuration
+(define-public systoleos-base
   (operating-system
-    (inherit installation-os)
+    ; (inherit installation-os)
 
     (host-name "systole")
     (timezone "Europe/Oslo")
 
+    ;; Use the UEFI variant of GRUB with the EFI System
+    ;; Partition mounted on /boot/efi.
+    (bootloader (bootloader-configuration
+                  (bootloader grub-efi-bootloader)
+                  (targets '("/boot/efi"))))
+
+    ;; Assume the target root file system is labelled "root",
+    ;; and the EFI System Partition has UUID 1234-ABCD.
+    (file-systems (append (list (file-system
+                                  (device (file-system-label "root"))
+                                  (mount-point "/")
+                                  (type "ext4"))
+                                (file-system
+                                  (device (uuid "1234-ABCD"
+                                                'fat))
+                                  (mount-point "/boot/efi")
+                                  (type "vfat"))) %base-file-systems))
 
     ;; The `brainlabmirror` account must be initialised with `passwd` command
     (users (append (list (user-account
@@ -146,7 +161,7 @@
 
     (packages (append (list
                        ;; Slicer
-                       slicer-5.8
+                       ; slicer-5.8
 
                        ;; terminal emulator
                        xterm
@@ -210,6 +225,11 @@
                    (extra-special-file "/etc/guix/channels.scm"
                                        serialise-channels)
 
+                   ;; Symlink background artwork into the OS image
+                   (extra-special-file
+                     "/run/current-system/profile/share/backgrounds/systole/Systole_Magnet_base_1280_1024.png"
+                     (local-file "../guix-systole-artwork/backgrounds/Systole_Magnet_base_1280_1024.png"))
+
                    )
 
              (modify-services %desktop-services
@@ -225,9 +245,4 @@
                                                                          "https://substitutes.nonguix.org"))
                                                       (channels %channels))))))
 
-    ;; Add the 'net.ifnames' argument to prevent network interfaces
-    ;; from having really long names.  This can cause an issue with
-    ;; wpa_supplicant when you try to connect to a wifi network.
-    (kernel-arguments '("quiet" "modprobe.blacklist=radeon" "net.ifnames=0"))))
-
-systoleos-configuration
+systoleos-base

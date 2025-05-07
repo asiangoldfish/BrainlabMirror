@@ -2,14 +2,14 @@
 ;; `guix system image -L . -t iso9660 guix-systole/systoleos/systoleos.scm`
 
 (define-module (systoleos brainlabmirror)
-  #:use-module (systoleos base)
   ; #:use-module (gnu packages linux)
-  ; #:use-module (gnu system)
+  #:use-module (gnu system)
   ; #:use-module (gnu system image)
   ; #:use-module (gnu system install)
   #:use-module (gnu image)
   #:use-module (nongnu packages linux)
-  #:use-module (nongnu system linux-initrd))
+  #:use-module (nongnu system linux-initrd)
+  #:use-module (systoleos base))
 
 (define systoleos-brainlabmirror
   (operating-system
