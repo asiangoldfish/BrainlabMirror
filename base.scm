@@ -227,6 +227,11 @@
                    (extra-special-file "/etc/guix/channels.scm"
                                        serialise-channels)
 
+                   ;; Symlink background artwork into the OS image
+                   (extra-special-file
+                     "/run/current-system/profile/share/backgrounds/systole/Systole_Magnet_base_1280_1024.png"
+                     (local-file "../guix-systole-artwork/backgrounds/Systole_Magnet_base_1280_1024.png"))
+
                    )
 
              (modify-services %desktop-services
