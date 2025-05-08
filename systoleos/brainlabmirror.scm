@@ -119,8 +119,8 @@
     ;; Use the full Linux kernel from Nonguix channel
     ;; so that the image can run on most commercial hardware
     (kernel linux)
-    (initrd microcode-initrd)
-    (firmware (list linux-firmware))
+    ; (initrd microcode-initrd)
+    (firmware (list linux-firmware iucode-tool amd-microcode intel-microcode))
 
     ;; Add the 'net.ifnames' argument to prevent network interfaces
     ;; from having really long names.  This can cause an issue with
