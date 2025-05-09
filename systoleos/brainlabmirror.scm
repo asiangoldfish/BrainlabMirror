@@ -1,5 +1,5 @@
 ;; This operating-system image definition can be built with:
-;; `guix system image -L . -t iso9660 guix-systole/systoleos/systoleos.scm`
+;; `guix system image -L . -t iso9660 systoleos/brainlabmirror.scm`
 
 (define-module (systoleos brainlabmirror)
   #:use-module (guix)
@@ -69,7 +69,7 @@
            (name 'guix-systole)
            (url "https://github.com/SystoleOS/guix-systole")
            ;; (branch "dev")
-           (branch "SCRUM-126-Define-package-for-SystoleOS-including-Slicer"))
+           (branch "SCRUM-134-Define-guix-systole-as-a-Guix-channel"))
          %default-channels))
 
 (define serialise-channels

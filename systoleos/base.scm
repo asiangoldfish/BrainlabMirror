@@ -1,5 +1,5 @@
 ;; This operating-system image definition can be built with:
-;; `guix system image -L . -t iso9660 guix-systole/systoleos/systoleos.scm`
+;; `guix system image -L . -t iso9660 systoleos/base.scm`
 
 (define-module (systoleos base)
   #:use-module (guix channels)
