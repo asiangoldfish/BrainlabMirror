@@ -108,6 +108,7 @@
                      `((".fluxbox/init" ,fluxbox-init)
                        (".fluxbox/keys" ,fluxbox-keys)
                        (".fluxbox/startup" ,fluxbox-startup)
+                       (".fluxbox/menu" ,fluxbox-menu)
                        (".idesktop/DICOMStore.lnk" ,idesk-icon-lnk)
                        (".conkyrc" ,conkyrc)
                        (".ideskrc" ,ideskrc))) %base-home-services))))

@@ -107,6 +107,7 @@
                      `((".fluxbox/init" ,fluxbox-init)
                        (".fluxbox/keys" ,fluxbox-keys)
                        (".fluxbox/startup" ,fluxbox-startup)
+                       (".fluxbox/menu" ,fluxbox-menu)
                        (".idesktop/DICOMStore.lnk" ,idesk-icon-lnk)
                        (".conkyrc" ,conkyrc)
                        (".ideskrc" ,ideskrc))) %base-home-services))))
@@ -161,7 +162,7 @@
 
     (packages (append (list
                        ;; Slicer
-                       ; slicer-5.8
+                       slicer-5.8
 
                        ;; terminal emulator
                        xterm
@@ -243,6 +244,6 @@
                                                                         %default-authorized-guix-keys))
                                                       (substitute-urls `(,@%default-substitute-urls
                                                                          "https://substitutes.nonguix.org"))
-                                                      (channels %channels))))))
+                                                      (channels %channels))))))))
 
 systoleos-base
