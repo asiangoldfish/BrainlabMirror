@@ -7,3 +7,6 @@ sleep 1
 feh --bg-scale /run/current-system/profile/share/backgrounds/systole/Systole_Magnet_base_1280_1024.png
 conky &
 wait $fbpid
+
+# Autostart 3D Slicer
+/run/current-system/profile/bin/Slicer &
