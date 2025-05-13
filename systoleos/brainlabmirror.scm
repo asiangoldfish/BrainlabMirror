@@ -113,6 +113,17 @@
                        (".conkyrc" ,conkyrc)
                        (".ideskrc" ,ideskrc))) %base-home-services))))
 
+(define-shepherd-service-type slicer-autostart-type
+  (start (lambda* (#:key outputs #:allow-other-keys)
+           (let* ((slicer-bin
+                   (string-append (assoc-ref outputs "out") "/Slicer"))
+                  (uid (user-uid "brainlabmirror")))
+             ;; shepherd/execute runs as root by default; this drops to the user
+             (invoke "su" "-l" "brainlabmirror" "-c" slicer-bin))))
+  (stop  (lambda args
+           (shepherd-send :TERM "Slicer")))
+  (description "Autostart 3D Slicer at login"))
+
 (define systoleos-brainlabmirror
   (operating-system
     (inherit installation-os)
@@ -192,7 +203,8 @@
                        font-dejavu
                        idesk
                        oxygen-icons
-                       thunar) %base-packages))
+                       thunar
+                       xrandr) %base-packages))
 
     (services
      (append (list
@@ -242,6 +254,9 @@
                    (extra-special-file
                      "/run/current-system/profile/share/backgrounds/systole/Systole_Magnet_base_1280_1024.png"
                      (local-file "../guix-systole-artwork/backgrounds/Systole_Magnet_base_1280_1024.png"))
+
+                   ;; Autostart Slicer
+                   (service slicer-autostart-type #t)
 
                    )
 

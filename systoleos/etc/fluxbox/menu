@@ -1,5 +1,0 @@
-[begin] (Fluxbox)
-  [submenu] (Applications)
-    [exec] (3D Slicer) {/run/current-system/profile/bin/Slicer}
-  [end]
-[end]
