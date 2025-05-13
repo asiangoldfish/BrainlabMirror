@@ -8,5 +8,8 @@ feh --bg-scale /run/current-system/profile/share/backgrounds/systole/Systole_Mag
 conky &
 wait $fbpid
 
+# X11 set output to preferred
+xrandr --auto
+
 # Autostart 3D Slicer
 /run/current-system/profile/bin/Slicer &
