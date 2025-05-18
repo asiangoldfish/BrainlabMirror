@@ -1,12 +1,12 @@
 #! /bin/sh
 
-fbpid=$!
+# fbpid=$!
 idesk &
-exec fluxbox -log ~/.fluxbox/log &
-sleep 1
-feh --bg-scale /run/current-system/profile/share/backgrounds/systole/Systole_Magnet_base_1280_1024.png
+# sleep 1
+feh --bg-scale /run/current-system/profile/share/backgrounds/systole/Systole_Magnet_base_1280_1024.png &
 conky &
-wait $fbpid
+# wait $fbpid
 
 # X11 set output to preferred
-xrandr --auto
+xrandr --auto &
+

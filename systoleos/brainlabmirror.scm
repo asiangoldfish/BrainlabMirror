@@ -21,6 +21,7 @@
   #:use-module (gnu packages wm)
   #:use-module (gnu packages kde-frameworks)
   #:use-module (gnu packages xfce)
+  #:use-module (gnu packages admin)
   #:use-module (gnu services)
   #:use-module (gnu services base)
   #:use-module (gnu services guix)
@@ -40,6 +41,7 @@
   #:use-module (gnu packages)
   #:use-module (gnu home)
   #:use-module (gnu home services)
+  ; #:use-module (ice-9 textual-ports)
   #:use-module (nongnu packages linux)
   #:use-module (nongnu system linux-initrd)
   #:use-module (guix-systole services dicomd-service)
@@ -70,6 +72,15 @@
            (url "https://github.com/SystoleOS/guix-systole")
            ;; (branch "dev")
            (branch "SCRUM-134-Define-guix-systole-as-a-Guix-channel"))
+         (channel
+          (name 'guix)
+          (url "https://codeberg.org/guix/guix-mirror.git")
+          (branch "master")
+          (introduction
+            (make-channel-introduction
+            "c91e27c60864faa229198f6f0caf620275c429a2"
+            (openpgp-fingerprint
+              "2841 9AC6 5038 7440 C7E9 2FFA 2208 D209 58C1 DEB0"))))
          %default-channels))
 
 (define serialise-channels
@@ -89,8 +100,8 @@
   (local-file "etc/fluxbox/init"))
 (define fluxbox-keys
   (local-file "etc/fluxbox/keys"))
-(define fluxbox-menu
-  (local-file "etc/fluxbox/menu"))
+; (define fluxbox-menu
+;   (local-file "etc/fluxbox/menu"))
 (define fluxbox-startup
   (local-file "etc/fluxbox/startup"))
 (define ideskrc
@@ -99,6 +110,26 @@
   (local-file "etc/idesk/DICOMStore.lnk"))
 (define nftables-config
   (local-file "etc/misc/nftables.conf"))
+(define fluxbox-startup-with-slicer
+  (computed-file
+    "fluxbox-startup-with-slicer"
+    #~(begin
+        (use-modules (ice-9 rdelim))
+        (call-with-input-file #$fluxbox-startup
+          (lambda (in)
+            (call-with-output-file #$output
+              (lambda (out)
+                (let loop ()
+                  (let ((line (read-line in)))
+                    (unless (eof-object? line)
+                      (display line out)
+                      (newline out)
+                      (loop))))
+                ;; Append Slicer and exec fluxbox at the end
+                (display (string-append #$(file-append slicer-5.8 "/Slicer") " &\n"
+                                        "exec fluxbox -log ~/.fluxbox/log\n") out))))))))
+
+
 (define user-home
   (home-environment
     (services
@@ -107,22 +138,12 @@
             (service home-files-service-type
                      `((".fluxbox/init" ,fluxbox-init)
                        (".fluxbox/keys" ,fluxbox-keys)
-                       (".fluxbox/startup" ,fluxbox-startup)
-                       (".fluxbox/menu" ,fluxbox-menu)
+                       ; (".fluxbox/startup" ,fluxbox-startup)
+                       (".fluxbox/startup" ,fluxbox-startup-with-slicer)
+                       ; (".fluxbox/menu" ,fluxbox-menu)
                        (".idesktop/DICOMStore.lnk" ,idesk-icon-lnk)
                        (".conkyrc" ,conkyrc)
                        (".ideskrc" ,ideskrc))) %base-home-services))))
-
-(define-shepherd-service-type slicer-autostart-type
-  (start (lambda* (#:key outputs #:allow-other-keys)
-           (let* ((slicer-bin
-                   (string-append (assoc-ref outputs "out") "/Slicer"))
-                  (uid (user-uid "brainlabmirror")))
-             ;; shepherd/execute runs as root by default; this drops to the user
-             (invoke "su" "-l" "brainlabmirror" "-c" slicer-bin))))
-  (stop  (lambda args
-           (shepherd-send :TERM "Slicer")))
-  (description "Autostart 3D Slicer at login"))
 
 (define systoleos-brainlabmirror
   (operating-system
@@ -194,6 +215,7 @@
                        git
                        curl
                        vim
+                       ; sudo
 
                        ;; desktop environment
                        conky
@@ -254,9 +276,6 @@
                    (extra-special-file
                      "/run/current-system/profile/share/backgrounds/systole/Systole_Magnet_base_1280_1024.png"
                      (local-file "../guix-systole-artwork/backgrounds/Systole_Magnet_base_1280_1024.png"))
-
-                   ;; Autostart Slicer
-                   (service slicer-autostart-type #t)
 
                    )
 
