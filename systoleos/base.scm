@@ -39,8 +39,6 @@
   #:use-module (gnu packages)
   #:use-module (gnu home)
   #:use-module (gnu home services)
-  #:use-module (nongnu packages linux)
-  #:use-module (nongnu system linux-initrd)
   #:use-module (guix-systole services dicomd-service)
   #:use-module (guix-systole packages slicer))
 
