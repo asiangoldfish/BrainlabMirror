@@ -70,17 +70,7 @@
          (channel
            (name 'guix-systole)
            (url "https://github.com/SystoleOS/guix-systole")
-           ;; (branch "dev")
-           (branch "SCRUM-134-Define-guix-systole-as-a-Guix-channel"))
-         (channel
-          (name 'guix)
-          (url "https://codeberg.org/guix/guix-mirror.git")
-          (branch "master")
-          (introduction
-            (make-channel-introduction
-            "c91e27c60864faa229198f6f0caf620275c429a2"
-            (openpgp-fingerprint
-              "2841 9AC6 5038 7440 C7E9 2FFA 2208 D209 58C1 DEB0"))))
+           (branch "dev")
          %default-channels))
 
 (define serialise-channels
