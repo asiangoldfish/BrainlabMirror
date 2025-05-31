@@ -31,7 +31,7 @@ table Config
   ToolTip.CaptionPlacement: Right
   Background.Delay: 0
   # Background.Source: /home/aavelar/.idesktop/icons
-  # Background.File: /run/current-system/profile/share/backgrounds/systole/backgrounds/Systole_Magnet_base.png
+  # Background.File: /run/current-system/profile/share/backgrounds/systole/Systole_Magnet_base_1280_1024.png
   # Background.Mode: Scale
   # Background.Color: #C2CCFF
 end
