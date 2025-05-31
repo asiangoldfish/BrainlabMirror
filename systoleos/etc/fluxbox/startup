@@ -8,4 +8,3 @@ conky &
 
 # X11 set output to preferred
 xrandr --auto &
-
