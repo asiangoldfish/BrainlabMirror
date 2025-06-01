@@ -33,6 +33,7 @@
   #:use-module (gnu system shadow)
   #:use-module (gnu system file-systems)
   #:use-module (gnu system keyboard)
+  #:use-module (gnu system setuid)
   #:use-module (gnu bootloader)
   #:use-module (gnu bootloader grub)
   #:use-module (gnu image)
@@ -40,7 +41,8 @@
   #:use-module (gnu home)
   #:use-module (gnu home services)
   #:use-module (guix-systole services dicomd-service)
-  #:use-module (guix-systole packages slicer))
+  #:use-module (guix-systole packages slicer)
+  #:use-module (guix-systole packages openigtlink))
 
 ;; https://substitutes.nonguix.org/signing-key.pub
 (define %signing-key
@@ -74,8 +76,6 @@
   (local-file "etc/fluxbox/init"))
 (define fluxbox-keys
   (local-file "etc/fluxbox/keys"))
-(define fluxbox-menu
-  (local-file "etc/fluxbox/menu"))
 (define fluxbox-startup
   (local-file "etc/fluxbox/startup"))
 (define ideskrc
@@ -86,6 +86,7 @@
   (local-file "etc/misc/nftables.conf"))
 (define user-home
   (home-environment
+    (packages (list slicer-5.8 slicer-openigtlink))
     (services
      (cons* (service home-xdg-configuration-files-service-type
                      `())
@@ -93,7 +94,6 @@
                      `((".fluxbox/init" ,fluxbox-init)
                        (".fluxbox/keys" ,fluxbox-keys)
                        (".fluxbox/startup" ,fluxbox-startup)
-                       (".fluxbox/menu" ,fluxbox-menu)
                        (".idesktop/DICOMStore.lnk" ,idesk-icon-lnk)
                        (".conkyrc" ,conkyrc)
                        (".ideskrc" ,ideskrc))) %base-home-services))))
@@ -101,10 +101,11 @@
 (define-shepherd-service-type slicer-autostart-type
   (start (lambda* (#:key outputs #:allow-other-keys)
            (let* ((slicer-bin
-                   (string-append (assoc-ref outputs "out") "/Slicer"))
+                   (string-append (assoc-ref outputs "out") "/Slicer-wrapper"))
                   (uid (user-uid "brainlabmirror")))
              ;; shepherd/execute runs as root by default; this drops to the user
-             (invoke "su" "-l" "brainlabmirror" "-c" slicer-bin))))
+             ; (invoke "su" "-l" "brainlabmirror" "-c" slicer-bin))))
+             (invoke "exec" slicer-bin)
   (stop  (lambda args
            (shepherd-send :TERM "Slicer")))
   (description "Autostart 3D Slicer at login"))
@@ -147,7 +148,7 @@
                            (comment "Admin")
                            (group "users")
                            (supplementary-groups (list "wheel" "netdev"
-                                                       "audio" "video"))))
+                                                       "audio" "video" "wheel"))))
                    %base-user-accounts))
 
     (sudoers-file (plain-file "sudoers"
@@ -157,9 +158,13 @@
                                               "~a ALL = NOPASSWD: ALL~%"
                                               "admin"))))
 
+    (setuid-programs (append (list (setuid-program
+                                   (program (file-append sudo "/bin/sudo"))))
+                           %setuid-programs))
+
     (packages (append (list
                        ;; Slicer
-                       slicer-5.8
+                       ; slicer-5.8
 
                        ;; terminal emulator
                        xterm

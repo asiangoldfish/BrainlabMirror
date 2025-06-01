@@ -35,6 +35,7 @@
   #:use-module (gnu system shadow)
   #:use-module (gnu system file-systems)
   #:use-module (gnu system keyboard)
+  #:use-module (gnu system setuid)
   #:use-module (gnu bootloader)
   #:use-module (gnu bootloader grub)
   #:use-module (gnu image)
@@ -45,7 +46,8 @@
   #:use-module (nongnu packages linux)
   #:use-module (nongnu system linux-initrd)
   #:use-module (guix-systole services dicomd-service)
-  #:use-module (guix-systole packages slicer))
+  #:use-module (guix-systole packages slicer)
+  #:use-module (guix-systole packages openigtlink))
 
 ;; https://substitutes.nonguix.org/signing-key.pub
 (define %signing-key
@@ -70,8 +72,9 @@
          (channel
            (name 'guix-systole)
            (url "https://github.com/SystoleOS/guix-systole")
-           (branch "dev")
-         %default-channels))
+           (branch "dev"))
+         %default-channels
+         ))
 
 (define serialise-channels
   (scheme-file "channels.scm"
@@ -90,8 +93,6 @@
   (local-file "etc/fluxbox/init"))
 (define fluxbox-keys
   (local-file "etc/fluxbox/keys"))
-; (define fluxbox-menu
-;   (local-file "etc/fluxbox/menu"))
 (define fluxbox-startup
   (local-file "etc/fluxbox/startup"))
 (define ideskrc
@@ -116,12 +117,13 @@
                       (newline out)
                       (loop))))
                 ;; Append Slicer and exec fluxbox at the end
-                (display (string-append #$(file-append slicer-5.8 "/Slicer") " &\n"
+                (display (string-append #$(file-append slicer-5.8 "/Slicer-wrapper") " &\n"
                                         "exec fluxbox -log ~/.fluxbox/log\n") out))))))))
 
 
 (define user-home
   (home-environment
+    (packages (list slicer-5.8 slicer-openigtlink))
     (services
      (cons* (service home-xdg-configuration-files-service-type
                      `())
@@ -130,7 +132,6 @@
                        (".fluxbox/keys" ,fluxbox-keys)
                        ; (".fluxbox/startup" ,fluxbox-startup)
                        (".fluxbox/startup" ,fluxbox-startup-with-slicer)
-                       ; (".fluxbox/menu" ,fluxbox-menu)
                        (".idesktop/DICOMStore.lnk" ,idesk-icon-lnk)
                        (".conkyrc" ,conkyrc)
                        (".ideskrc" ,ideskrc))) %base-home-services))))
@@ -178,7 +179,7 @@
                            (password "")
                            (group "users")
                            (supplementary-groups (list "dicom" "netdev"
-                                                       "audio" "video")))
+                                                       "audio" "video" "wheel")))
                          (user-account
                            (name "admin")
                            (comment "Admin")
@@ -194,9 +195,13 @@
                                               "~a ALL = NOPASSWD: ALL~%"
                                               "admin"))))
 
+    (setuid-programs (append (list (setuid-program
+                                   (program (file-append sudo "/bin/sudo"))))
+                           %setuid-programs))
+
     (packages (append (list
                        ;; Slicer
-                       slicer-5.8
+                       ; slicer-5.8
 
                        ;; terminal emulator
                        xterm
@@ -205,7 +210,7 @@
                        git
                        curl
                        vim
-                       ; sudo
+                       sudo
 
                        ;; desktop environment
                        conky
