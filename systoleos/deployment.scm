@@ -176,6 +176,10 @@
                   (targets '("/boot/efi"))))
 
 
+    ;; ##########################################################
+    ;;  file-systems field (Needs to be adapted to target machine)
+    ;; ##########################################################
+
     (file-systems (append (list (file-system
                                   (device "/dev/vda3")  ;; Specify where your system is mounted.
                                   (mount-point "/")     ;; Setup a mounting point. 
@@ -297,15 +301,15 @@
                                                                          "https://substitutes.nonguix.org"))
                                                       (channels %channels))))))))
 
-;; ############################################################################
-;;      Target(s) specified here:
-;; ############################################################################
+;; ##########################################################
+;;      Target(s) specified here: (Needs to be adapted to target(s))
+;; ##########################################################
 
 (list (machine
        (operating-system systoleos-brainlabmirror)      ; Specified OS definition.
        (environment managed-host-environment-type)
        (configuration (machine-ssh-configuration
-                       (host-name "192.168.122.215")    ; Target IP address. (guix vm on aadne machine)
+                       (host-name "192.168.122.215")    ; Target IP address.
                        (system "x86_64-linux")          ; Target system.
                        (user "systole")                    ; Target User for SSH.
                        (identity "~/.ssh/id_rsa")       ; Host ssh path.
