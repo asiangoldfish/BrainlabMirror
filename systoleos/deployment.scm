@@ -307,11 +307,11 @@
 ;; ############################################################################
 
 (list (machine
-       (operating-system systoleos-brainlabmirror) ; Reference your OS
+       (operating-system systoleos-brainlabmirror)      ; Specified OS definition.
        (environment managed-host-environment-type)
        (configuration (machine-ssh-configuration
-                       (host-name "192.168.122.229") ; Replace with actual hostname/IP
-                       (system "x86_64-linux") ; Adjust if needed
-                       (user "systole") ; User for SSH connection
-                       (identity "~/.ssh/id_rsa") ; Path to SSH private key
-                       (port 22))))) ; SSH port
+                       (host-name "192.168.122.229")    ; Target IP address.
+                       (system "x86_64-linux")          ; Target system.
+                       (user "systole")                 ; Target User for SSH.
+                       (identity "~/.ssh/id_rsa")       ; Host ssh path.
+                       (port 22)))))                    ; Listening port.
