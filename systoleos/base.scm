@@ -70,8 +70,6 @@
 
 ;; Fluxbox configuration inspired by guix-psy-dicom
 ;; https://github.com/OUH-MESHLab/guix-psy-dicom/blob/enhancement/psydicom_system/config.scm
-(define conkyrc
-  (local-file "etc/conky/conky.conf"))
 (define fluxbox-init
   (local-file "etc/fluxbox/init"))
 (define fluxbox-keys
@@ -80,8 +78,6 @@
   (local-file "etc/fluxbox/startup"))
 (define ideskrc
   (local-file "etc/idesk/ideskrc"))
-(define idesk-icon-lnk
-  (local-file "etc/idesk/DICOMStore.lnk"))
 (define nftables-config
   (local-file "etc/misc/nftables.conf"))
 (define user-home
@@ -94,8 +90,6 @@
                      `((".fluxbox/init" ,fluxbox-init)
                        (".fluxbox/keys" ,fluxbox-keys)
                        (".fluxbox/startup" ,fluxbox-startup)
-                       (".idesktop/DICOMStore.lnk" ,idesk-icon-lnk)
-                       (".conkyrc" ,conkyrc)
                        (".ideskrc" ,ideskrc))) %base-home-services))))
 
 (define-shepherd-service-type slicer-autostart-type
