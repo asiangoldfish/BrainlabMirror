@@ -175,17 +175,12 @@
                   (bootloader grub-efi-bootloader)
                   (targets '("/boot/efi"))))
 
-    ;; Assume the target root file system is labelled "root",
-    ;; and the EFI System Partition has UUID 1234-ABCD.
+
     (file-systems (append (list (file-system
-                                  (device (file-system-label "root"))
-                                  (mount-point "/")
-                                  (type "ext4"))
-                                (file-system
-                                  (device (uuid "1234-ABCD"
-                                                'fat))
-                                  (mount-point "/boot/efi")
-                                  (type "vfat"))) %base-file-systems))
+                                  (device "/dev/vda3")  ;; Specify where your system is mounted.
+                                  (mount-point "/")     ;; Setup a mounting point. 
+                                  (type "ext4")))       ;; Specify the file system. 
+                                    %base-file-systems))
 
     ;; The `brainlabmirror` account must be initialised with `passwd` command
     (users (append (list (user-account
@@ -310,8 +305,8 @@
        (operating-system systoleos-brainlabmirror)      ; Specified OS definition.
        (environment managed-host-environment-type)
        (configuration (machine-ssh-configuration
-                       (host-name "192.168.122.229")    ; Target IP address.
+                       (host-name "192.168.122.215")    ; Target IP address. (guix vm on aadne machine)
                        (system "x86_64-linux")          ; Target system.
-                       (user "systole")                 ; Target User for SSH.
+                       (user "systole")                    ; Target User for SSH.
                        (identity "~/.ssh/id_rsa")       ; Host ssh path.
                        (port 22)))))                    ; Listening port.
