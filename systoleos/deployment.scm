@@ -20,6 +20,8 @@
                 (guix build-system trivial)
                 (gnu packages version-control)
                 (gnu packages vim)
+                (gnu packages ssh)
+                (gnu packages gnome)
                 (gnu packages curl)
                 (gnu packages linux)
                 (gnu packages mtools)
@@ -53,8 +55,6 @@
                 (gnu packages)
                 (gnu home)
                 (gnu home services)
-                (nongnu packages linux)
-                (nongnu system linux-initrd)
                 (guix-systole services dicomd-service)
                 (guix-systole packages slicer)
                 (guix-systole packages openigtlink))
@@ -64,26 +64,19 @@
 ;;      System image definition here:
 ;; ############################################################################
 
-;; https://substitutes.nonguix.org/signing-key.pub
-(define %signing-key
-  (plain-file "nonguix.pub"
-   "(public-key
- (ecc
-  (curve Ed25519)
-  (q #C1FD53E5D4CE971933EC50C9F307AE2171A2D3B52C804642A7A35F84F3A4EA98#)))"))
 
 ;; The Nonguix channel is necessary for the Linux kernel with nonfree blobs,
 ;; required by most commercial hardware.
 (define %channels
-  (cons* (channel
-           (name 'nonguix)
-           (url "https://gitlab.com/nonguix/nonguix")
+  (cons* ;(channel
+          ; (name 'nonguix)
+           ;(url "https://gitlab.com/nonguix/nonguix")
            ;; Enable signature verification:
-           (introduction
-            (make-channel-introduction
-             "897c1a470da759236cc11798f4e0a5f7d4d59fbc"
-             (openpgp-fingerprint
-              "2A39 3FFF 68F4 EF7A 3D29  12AF 6F51 20A0 22FB B2D5"))))
+           ;(introduction
+           ; (make-channel-introduction
+           ;  "897c1a470da759236cc11798f4e0a5f7d4d59fbc"
+            ; (openpgp-fingerprint
+;              "2A39 3FFF 68F4 EF7A 3D29  12AF 6F51 20A0 22FB B2D5"))))
          (channel
            (name 'guix-systole)
            (url "https://github.com/SystoleOS/guix-systole")
@@ -134,7 +127,7 @@
                 ;; Append Slicer and exec fluxbox at the end
                 (display (string-append #$(file-append slicer-5.8 "/Slicer-wrapper") " &\n"
                                         "exec fluxbox -log ~/.fluxbox/log\n") out))))))))
-
+;; Slicerapp-real in ~/.fluxbox/apps
 
 (define user-home
   (home-environment
@@ -147,8 +140,6 @@
                        (".fluxbox/keys" ,fluxbox-keys)
                        ; (".fluxbox/startup" ,fluxbox-startup)
                        (".fluxbox/startup" ,fluxbox-startup-with-slicer)
-                       (".idesktop/DICOMStore.lnk" ,idesk-icon-lnk)
-                       (".conkyrc" ,conkyrc)
                        (".ideskrc" ,ideskrc))) %base-home-services))))
 
 (define systoleos-brainlabmirror
@@ -157,14 +148,14 @@
 
     ;; Use the full Linux kernel from Nonguix channel
     ;; so that the image can run on most commercial hardware
-    (kernel linux)
+    ;(kernel linux)
     ; (initrd microcode-initrd)
-    (firmware (list linux-firmware iucode-tool amd-microcode intel-microcode))
+    ;(firmware (list linux-firmware iucode-tool amd-microcode intel-microcode))
 
     ;; Add the 'net.ifnames' argument to prevent network interfaces
     ;; from having really long names.  This can cause an issue with
     ;; wpa_supplicant when you try to connect to a wifi network.
-    (kernel-arguments '("quiet" "modprobe.blacklist=radeon,amdgpu" "net.ifnames=0"))
+    ;(kernel-arguments '("quiet" "modprobe.blacklist=radeon,amdgpu" "net.ifnames=0"))
 
     (host-name "systole")
     (timezone "Europe/Oslo")
@@ -176,38 +167,45 @@
                   (targets '("/boot/efi"))))
 
 
-    ;; ##########################################################
-    ;;  file-systems field (Needs to be adapted to target machine)
-    ;; ##########################################################
-
     (file-systems (append (list (file-system
-                                  (device "/dev/vda3")  ;; Specify where your system is mounted.
+                                  (device "/dev/sda4")  ;; Specify where your system is mounted.
                                   (mount-point "/")     ;; Setup a mounting point. 
-                                  (type "ext4")))       ;; Specify the file system. 
+                                  (type "ext4"))
+								(file-system
+								  (device "/dev/sda1")
+								  (mount-point "/boot/efi")
+								  (type "vfat")))       ;; Specify the file system. 
                                     %base-file-systems))
 
     ;; The `brainlabmirror` account must be initialised with `passwd` command
-    (users (append (list (user-account
+    (users (append (list 
+                     (user-account
                            (name "brainlabmirror")
                            (comment "BrainLab")
+                           (uid 1000)
                            (password "")
                            (group "users")
+                           (home-directory "/home/brainlabmirror")
                            (supplementary-groups (list "dicom" "netdev"
                                                        "audio" "video" "wheel")))
-                         (user-account
-                           (name "admin")
-                           (comment "Admin")
+                         
+    
+                     (user-account
+                           (name "systole")
+                           (comment "test")
+                           (uid 1003)
+                           (password "")
                            (group "users")
-                           (supplementary-groups (list "wheel" "netdev"
-                                                       "audio" "video"))))
+                           (home-directory "/home/systole")
+                           (supplementary-groups (list "dicom" "netdev"
+                                                       "audio" "video" "wheel"))))
                    %base-user-accounts))
 
-    (sudoers-file (plain-file "sudoers"
-                              (string-append (plain-file-content
-                                              %sudoers-specification)
-                                             (format #f
-                                              "~a ALL = NOPASSWD: ALL~%"
-                                              "admin"))))
+    (sudoers-file
+     (plain-file "sudoers"
+                 (string-append (plain-file-content %sudoers-specification)
+                                (format #f "~a ALL = NOPASSWD: ALL~%"
+                                        "systole"))))
 
     (setuid-programs (append (list (setuid-program
                                    (program (file-append sudo "/bin/sudo"))))
@@ -219,12 +217,17 @@
 
                        ;; terminal emulator
                        xterm
+                       xf86-input-mouse
 
                        ;; utils
                        git
                        curl
                        vim
                        sudo
+
+                       ;; Network
+                       network-manager
+                       openssh
 
                        ;; desktop environment
                        conky
@@ -257,6 +260,19 @@
                                                                  (user-session
                                                                   ;; "xfce.desktop"
                                                                   "fluxbox"))))))
+
+                  ;;  ;; Static networking for one NIC, IPv4-only.
+                  ;;  (service static-networking-service-type
+                  ;;           (list (static-networking
+                  ;;                   (addresses
+                  ;;                     (list (network-address
+                  ;;                             (device "eno1")
+                  ;;                             (value "192.168.32.10/24"))))
+                  ;;                   (routes
+                  ;;                     (list (network-route
+                  ;;                             (destination "default")
+                  ;;                             (gateway "10.0.0.1"))))
+                  ;;                   (name-servers '("10.0.0.1")))))
 
                    ;; Services for xfce desktop environment
                    ;; (service xfce-desktop-service-type)
@@ -291,26 +307,23 @@
              (modify-services %desktop-services
                (delete gdm-service-type)
                (guix-service-type config =>
-                                  (guix-configuration (inherit config)
-                                                      (guix (guix-for-channels
-                                                             %channels))
-                                                      (authorized-keys (cons*
-                                                                        %signing-key
-                                                                        %default-authorized-guix-keys))
-                                                      (substitute-urls `(,@%default-substitute-urls
-                                                                         "https://substitutes.nonguix.org"))
-                                                      (channels %channels))))))))
+                                  (guix-configuration
+                                   (authorized-keys (append `(,(local-file
+                                                                "/etc/guix/signing-key.pub")) %default-authorized-guix-keys)))))
 
-;; ##########################################################
-;;      Target(s) specified here: (Needs to be adapted to target(s))
-;; ##########################################################
+             ))))
+
+;; ############################################################################
+;;      Target(s) specified here:
+;; ############################################################################
 
 (list (machine
        (operating-system systoleos-brainlabmirror)      ; Specified OS definition.
        (environment managed-host-environment-type)
        (configuration (machine-ssh-configuration
-                       (host-name "192.168.122.215")    ; Target IP address.
+                       (host-name "192.168.32.10")    ; Target IP address. (guix vm on aadne machine)
                        (system "x86_64-linux")          ; Target system.
                        (user "systole")                    ; Target User for SSH.
-                       (identity "~/.ssh/id_rsa")       ; Host ssh path.
+                       (identity "/home/khai/.ssh/id_rsa")       ; Host ssh path.
                        (port 22)))))                    ; Listening port.
+
