@@ -264,8 +264,8 @@
                    (service dicomd-service-type)
 
                    ;; Include the channel file so that it can be used during installation
-                   (extra-special-file "/etc/guix/channels.scm"
-                                       serialise-channels)
+                  ;;  (extra-special-file "/etc/guix/channels.scm"
+                  ;;                      serialise-channels)
 
                    ;; Symlink background artwork into the OS image
                    (extra-special-file
@@ -278,13 +278,14 @@
                (delete gdm-service-type)
                (guix-service-type config =>
                                   (guix-configuration (inherit config)
-                                                      (guix (guix-for-channels
-                                                             %channels))
+                                                      ;; (guix (guix-for-channels
+                                                      ;;        %channels))
                                                       (authorized-keys (cons*
                                                                         %signing-key
                                                                         %default-authorized-guix-keys))
                                                       (substitute-urls `(,@%default-substitute-urls
                                                                          "https://substitutes.nonguix.org"))
-                                                      (channels %channels))))))))
+                                                      ;; (channels %channels)
+                                                      )))))))
 
 systoleos-brainlabmirror
