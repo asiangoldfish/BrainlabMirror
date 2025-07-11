@@ -2,74 +2,65 @@
 ;; `guix system image -L . -t iso9660 systoleos/base.scm`
 
 (define-module (systoleos base)
-  #:use-module (guix channels)
-  #:use-module (guix gexp)
-  #:use-module (guix build utils)
-  #:use-module (guix build-system trivial)
-  #:use-module (gnu packages version-control)
-  #:use-module (gnu packages vim)
-  #:use-module (gnu packages curl)
-  #:use-module (gnu packages linux)
-  #:use-module (gnu packages mtools)
-  #:use-module (gnu packages package-management)
-  #:use-module (gnu packages terminals)
-  #:use-module (gnu packages xorg)
-  #:use-module (gnu packages conky)
-  #:use-module (gnu packages image-viewers)
-  #:use-module (gnu packages fonts)
-  #:use-module (gnu packages wm)
-  #:use-module (gnu packages kde-frameworks)
-  #:use-module (gnu packages xfce)
-  #:use-module (gnu services)
-  #:use-module (gnu services base)
-  #:use-module (gnu services guix)
-  #:use-module (gnu services desktop)
-  #:use-module (gnu services xorg)
-  #:use-module (gnu services lightdm)
-  #:use-module (gnu services networking)
-  #:use-module (gnu system)
-  #:use-module (gnu system image)
-  #:use-module (gnu system install)
-  #:use-module (gnu system shadow)
-  #:use-module (gnu system file-systems)
-  #:use-module (gnu system keyboard)
-  #:use-module (gnu system setuid)
-  #:use-module (gnu bootloader)
-  #:use-module (gnu bootloader grub)
-  #:use-module (gnu image)
-  #:use-module (gnu packages)
-  #:use-module (gnu home)
-  #:use-module (gnu home services)
-  #:use-module (guix-systole services dicomd-service)
-  #:use-module (guix-systole packages slicer)
-  #:use-module (guix-systole packages openigtlink))
+                #:use-module (gnu)
+                #:use-module (gnu machine)
+                #:use-module (gnu machine ssh)
+                #:use-module (guix)
+                #:use-module (guix channels)
+                #:use-module (guix gexp)
+                #:use-module (guix build utils)
+                #:use-module (guix build-system trivial)
+                #:use-module (gnu packages version-control)
+                #:use-module (gnu packages vim)
+                #:use-module (gnu packages ssh)
+                #:use-module (gnu packages gnome)
+                #:use-module (gnu packages curl)
+                #:use-module (gnu packages linux)
+                #:use-module (gnu packages mtools)
+                #:use-module (gnu packages package-management)
+                #:use-module (gnu packages terminals)
+                #:use-module (gnu packages xorg)
+                #:use-module (gnu packages conky)
+                #:use-module (gnu packages image-viewers)
+                #:use-module (gnu packages fonts)
+                #:use-module (gnu packages wm)
+                #:use-module (gnu packages kde-frameworks)
+                #:use-module (gnu packages xfce)
+                #:use-module (gnu packages admin)
+                #:use-module (gnu services)
+                #:use-module (gnu services base)
+                #:use-module (gnu services guix)
+                #:use-module (gnu services desktop)
+                #:use-module (gnu services xorg)
+                #:use-module (gnu services lightdm)
+                #:use-module (gnu services networking)
+                #:use-module (gnu services ssh)
+                #:use-module (gnu system)
+                #:use-module (gnu system image)
+                #:use-module (gnu system install)
+                #:use-module (gnu system shadow)
+                #:use-module (gnu system file-systems)
+                #:use-module (gnu system keyboard)
+                #:use-module (gnu system setuid)
+                #:use-module (gnu bootloader)
+                #:use-module (gnu bootloader grub)
+                #:use-module (gnu image)
+                #:use-module (gnu packages)
+                #:use-module (gnu home)
+                #:use-module (gnu home services)
+                #:use-module (guix-systole services dicomd-service)
+                #:use-module (guix-systole packages slicer)
+                #:use-module (guix-systole packages openigtlink))
 
-;; https://substitutes.nonguix.org/signing-key.pub
-(define %signing-key
-  (plain-file "nonguix.pub"
-   "(public-key
- (ecc
-  (curve Ed25519)
-  (q #C1FD53E5D4CE971933EC50C9F307AE2171A2D3B52C804642A7A35F84F3A4EA98#)))"))
 
-(define %channels
-  (cons* (channel
-           (name 'guix-systole)
-           (url "https://github.com/SystoleOS/guix-systole")
-           (branch "dev")
-         %default-channels))
-
-(define serialise-channels
-  (scheme-file "channels.scm"
-               #~(begin
-                   (with-output-to-file %output
-                     (lambda ()
-                       (display (sexp->string '%
-                                              (%channels)))
-                       (newline))))))
+;; ############################################################################
+;;      System image definition here:
+;; ############################################################################
 
 ;; Fluxbox configuration inspired by guix-psy-dicom
 ;; https://github.com/OUH-MESHLab/guix-psy-dicom/blob/enhancement/psydicom_system/config.scm
+(define conkyrc
+  (local-file "etc/conky/conky.conf"))
 (define fluxbox-init
   (local-file "etc/fluxbox/init"))
 (define fluxbox-keys
@@ -78,8 +69,30 @@
   (local-file "etc/fluxbox/startup"))
 (define ideskrc
   (local-file "etc/idesk/ideskrc"))
+(define idesk-icon-lnk
+  (local-file "etc/idesk/DICOMStore.lnk"))
 (define nftables-config
   (local-file "etc/misc/nftables.conf"))
+(define fluxbox-startup-with-slicer
+  (computed-file
+    "fluxbox-startup-with-slicer"
+    #~(begin
+        (use-modules (ice-9 rdelim))
+        (call-with-input-file #$fluxbox-startup
+          (lambda (in)
+            (call-with-output-file #$output
+              (lambda (out)
+                (let loop ()
+                  (let ((line (read-line in)))
+                    (unless (eof-object? line)
+                      (display line out)
+                      (newline out)
+                      (loop))))
+                ;; Append Slicer and exec fluxbox at the end
+                (display (string-append #$(file-append slicer-5.8 "/Slicer-wrapper") " &\n"
+                                        "exec fluxbox -log ~/.fluxbox/log\n") out))))))))
+;; Slicerapp-real in ~/.fluxbox/apps
+
 (define user-home
   (home-environment
     (packages (list slicer-5.8 slicer-openigtlink))
@@ -89,24 +102,24 @@
             (service home-files-service-type
                      `((".fluxbox/init" ,fluxbox-init)
                        (".fluxbox/keys" ,fluxbox-keys)
-                       (".fluxbox/startup" ,fluxbox-startup)
+                       ; (".fluxbox/startup" ,fluxbox-startup)
+                       (".fluxbox/startup" ,fluxbox-startup-with-slicer)
                        (".ideskrc" ,ideskrc))) %base-home-services))))
 
-(define-shepherd-service-type slicer-autostart-type
-  (start (lambda* (#:key outputs #:allow-other-keys)
-           (let* ((slicer-bin
-                   (string-append (assoc-ref outputs "out") "/Slicer-wrapper"))
-                  (uid (user-uid "brainlabmirror")))
-             ;; shepherd/execute runs as root by default; this drops to the user
-             ; (invoke "su" "-l" "brainlabmirror" "-c" slicer-bin))))
-             (invoke "exec" slicer-bin)
-  (stop  (lambda args
-           (shepherd-send :TERM "Slicer")))
-  (description "Autostart 3D Slicer at login"))
-
-(define systoleos-base
+(define-public systoleos-base
   (operating-system
-    ; (inherit installation-os)
+    (inherit installation-os)
+
+    ;; Use the full Linux kernel from Nonguix channel
+    ;; so that the image can run on most commercial hardware
+    ;(kernel linux)
+    ; (initrd microcode-initrd)
+    ;(firmware (list linux-firmware iucode-tool amd-microcode intel-microcode))
+
+    ;; Add the 'net.ifnames' argument to prevent network interfaces
+    ;; from having really long names.  This can cause an issue with
+    ;; wpa_supplicant when you try to connect to a wifi network.
+    ;(kernel-arguments '("quiet" "modprobe.blacklist=radeon,amdgpu" "net.ifnames=0"))
 
     (host-name "systole")
     (timezone "Europe/Oslo")
@@ -117,40 +130,45 @@
                   (bootloader grub-efi-bootloader)
                   (targets '("/boot/efi"))))
 
-    ;; Assume the target root file system is labelled "root",
-    ;; and the EFI System Partition has UUID 1234-ABCD.
+
     (file-systems (append (list (file-system
-                                  (device (file-system-label "root"))
-                                  (mount-point "/")
+                                  (device "/dev/nvme0n1p3")  ;; Specify where your system is mounted.
+                                  (mount-point "/")     ;; Setup a mounting point. 
                                   (type "ext4"))
-                                (file-system
-                                  (device (uuid "1234-ABCD"
-                                                'fat))
-                                  (mount-point "/boot/efi")
-                                  (type "vfat"))) %base-file-systems))
+								(file-system
+								  (device "/dev/nvme0n1p1")
+								  (mount-point "/boot/efi")
+								  (type "vfat")))       ;; Specify the file system. 
+                                    %base-file-systems))
 
     ;; The `brainlabmirror` account must be initialised with `passwd` command
-    (users (append (list (user-account
+    (users (append (list 
+                     (user-account
                            (name "brainlabmirror")
                            (comment "BrainLab")
+                           (uid 1000)
                            (password "")
                            (group "users")
+                           (home-directory "/home/brainlabmirror")
                            (supplementary-groups (list "dicom" "netdev"
-                                                       "audio" "video")))
-                         (user-account
-                           (name "admin")
-                           (comment "Admin")
+                                                       "audio" "video" "wheel")))
+    
+                     (user-account
+                           (name "systole")
+                           (comment "test")
+                           (uid 1003)
+                           (password "")
                            (group "users")
-                           (supplementary-groups (list "wheel" "netdev"
+                           (home-directory "/home/systole")
+                           (supplementary-groups (list "dicom" "netdev"
                                                        "audio" "video" "wheel"))))
                    %base-user-accounts))
 
-    (sudoers-file (plain-file "sudoers"
-                              (string-append (plain-file-content
-                                              %sudoers-specification)
-                                             (format #f
-                                              "~a ALL = NOPASSWD: ALL~%"
-                                              "admin"))))
+    (sudoers-file
+     (plain-file "sudoers"
+                 (string-append (plain-file-content %sudoers-specification)
+                                (format #f "~a ALL = NOPASSWD: ALL~%"
+                                        "brainlabmirror"))))
 
     (setuid-programs (append (list (setuid-program
                                    (program (file-append sudo "/bin/sudo"))))
@@ -162,11 +180,17 @@
 
                        ;; terminal emulator
                        xterm
+                       xf86-input-mouse
 
                        ;; utils
                        git
                        curl
                        vim
+                       sudo
+
+                       ;; Network
+                       network-manager
+                       openssh
 
                        ;; desktop environment
                        conky
@@ -176,7 +200,8 @@
                        font-dejavu
                        idesk
                        oxygen-icons
-                       thunar) %base-packages))
+                       thunar
+                       xrandr) %base-packages))
 
     (services
      (append (list
@@ -198,9 +223,6 @@
                                                                  (user-session
                                                                   ;; "xfce.desktop"
                                                                   "fluxbox"))))))
-
-                   ;; Services for xfce desktop environment
-                   ;; (service xfce-desktop-service-type)
                    
                    ;; nftables service
                    (service nftables-service-type
@@ -218,31 +240,25 @@
                    ;; Use Dicomd service defined in guix-systole
                    (service dicomd-service-type)
 
-                   ;; Include the channel file so that it can be used during installation
-                   (extra-special-file "/etc/guix/channels.scm"
-                                       serialise-channels)
-
                    ;; Symlink background artwork into the OS image
                    (extra-special-file
                      "/run/current-system/profile/share/backgrounds/systole/Systole_Magnet_base_1280_1024.png"
                      (local-file "../guix-systole-artwork/backgrounds/Systole_Magnet_base_1280_1024.png"))
 
-                   ;; Autostart Slicer
-                   (service slicer-autostart-type #t)
+                    (service openssh-service-type
+                      (openssh-configuration
+                        (public-key-authentication? #t)
+                        (password-authentication? #f)
+                        (authorized-keys
+                          `(("brainlabmirror" ,(local-file "/home/khai/.ssh/id_rsa.pub"))))))
 
                    )
 
              (modify-services %desktop-services
                (delete gdm-service-type)
                (guix-service-type config =>
-                                  (guix-configuration (inherit config)
-                                                      (guix (guix-for-channels
-                                                             %channels))
-                                                      (authorized-keys (cons*
-                                                                        %signing-key
-                                                                        %default-authorized-guix-keys))
-                                                      (substitute-urls `(,@%default-substitute-urls
-                                                                         "https://substitutes.nonguix.org"))
-                                                      (channels %channels))))))))
+                                  (guix-configuration
+                                   (authorized-keys (append `(,(local-file
+                                                                "/etc/guix/signing-key.pub")) %default-authorized-guix-keys)))))
 
-systoleos-base
+             ))))
