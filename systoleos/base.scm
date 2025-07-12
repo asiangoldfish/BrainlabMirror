@@ -281,6 +281,10 @@
                      "/run/current-system/profile/share/backgrounds/systole/Systole_Magnet_base_1280_1024.png"
                      (local-file "../guix-systole-artwork/backgrounds/Systole_Magnet_base_1280_1024.png"))
 
+                    (extra-special-file
+                      "/etc/NetworkManager/system-connections/ssid.nmconnection"
+                      (local-file "etc/NetworkManager/ssid.nmconnection"))
+
                     (service openssh-service-type
                       (openssh-configuration
                         (public-key-authentication? #t)
