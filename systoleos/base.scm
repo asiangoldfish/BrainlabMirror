@@ -10,6 +10,7 @@
                 #:use-module (guix gexp)
                 #:use-module (guix build utils)
                 #:use-module (guix build-system trivial)
+                #:use-module (gnu packages chromium)
                 #:use-module (gnu packages version-control)
                 #:use-module (gnu packages vim)
                 #:use-module (gnu packages ssh)
@@ -50,6 +51,7 @@
                 #:use-module (gnu home services)
                 #:use-module (guix-systole services dicomd-service)
                 #:use-module (guix-systole packages slicer)
+                #:use-module (guix-systole packages ivsvista)
                 #:use-module (guix-systole packages openigtlink))
 
 
@@ -104,6 +106,37 @@
                        (".fluxbox/keys" ,fluxbox-keys)
                        ; (".fluxbox/startup" ,fluxbox-startup)
                        (".fluxbox/startup" ,fluxbox-startup-with-slicer)
+                       (".ideskrc" ,ideskrc))) %base-home-services))))
+
+(define fluxbox-startup-with-ivsvista
+  (computed-file
+    "fluxbox-startup-with-ivsvista"
+    #~(begin
+        (use-modules (ice-9 rdelim))
+        (call-with-input-file #$fluxbox-startup
+          (lambda (in)
+            (call-with-output-file #$output
+              (lambda (out)
+                (let loop ()
+                  (let ((line (read-line in)))
+                    (unless (eof-object? line)
+                      (display line out)
+                      (newline out)
+                      (loop))))
+                ;; Append ungoogled-chromium in kiosk mode at the end
+                (display "chromium -kiosk \"google.com\" &\n" out)
+                (display "exec fluxbox -log ~/.fluxbox/log\n" out))))))))
+                                        
+(define user-home-ivsvista
+  (home-environment
+    (packages (list ivsvista)) ;Replace with your desired package(s)
+    (services
+     (cons* (service home-xdg-configuration-files-service-type
+                     `())
+            (service home-files-service-type
+                     `((".fluxbox/init" ,fluxbox-init)
+                       (".fluxbox/keys" ,fluxbox-keys)
+                       (".fluxbox/startup" ,fluxbox-startup-with-ivsvista) ;Changed here
                        (".ideskrc" ,ideskrc))) %base-home-services))))
 
 (define-public systoleos-base
@@ -188,9 +221,12 @@
                        vim
                        sudo
 
+                       ivsvista
+
                        ;; Network
                        network-manager
                        openssh
+                       ungoogled-chromium
 
                        ;; desktop environment
                        conky
@@ -230,7 +266,7 @@
                                                               "etc/nftables.conf"))))
 
                    (service guix-home-service-type
-                            `(("brainlabmirror" ,user-home)))
+                            `(("brainlabmirror" ,user-home-ivsvista)))
 
                    (set-xorg-configuration
                     (xorg-configuration (keyboard-layout (keyboard-layout
