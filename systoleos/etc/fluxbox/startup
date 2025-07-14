@@ -1,0 +1,10 @@
+#! /bin/sh
+
+# fbpid=$!
+idesk &
+# sleep 1
+conky &
+# wait $fbpid
+
+# X11 set output to preferred
+xrandr --auto &
